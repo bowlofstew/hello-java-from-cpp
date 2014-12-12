@@ -13,7 +13,7 @@
 class jvm_loader {
 public:
     void load(const char * classpathA);
-    void call(const char * classNameA, const char * methodNameA);
+    void call(const char * classNameA, const char * methodNameA, const char * args);
     void unload();
 private:
     JavaVM *jvm;
@@ -32,15 +32,18 @@ void jvm_loader::load(const char * classpathA) {
     vm_args.nOptions = 1;
     vm_args.options = options;
     vm_args.ignoreUnrecognized = false;
-    JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);
+    int status = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);
+    if(status < 0) {
+        std::cout << "unable to create JVM" << std::endl;
+    }
     print_delta(t0, get_now());
 }
 
-void jvm_loader::call(const char * classNameA, const char * methodNameA) {
+void jvm_loader::call(const char * classNameA, const char * methodNameA, const char * args) {
     std::cout << __func__ << std::endl;
     point t0 = get_now();
     jclass javaClass = env->FindClass(classNameA);
-    jmethodID methodId = env->GetStaticMethodID(javaClass, "call", "(I)V");
+    jmethodID methodId = env->GetStaticMethodID(javaClass , methodNameA, args);
     /**
      * NOTE: If you need to pass varargs to the method, you can still
      * do this by simply adding them after the methodId below.
